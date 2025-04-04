@@ -10,7 +10,7 @@ Low Engagement in Learning: Many learners find conventional learning methods bor
 Difficulty in Skill Assessment: Traditional tests fail to provide real-time feedback on a learner’s specific weaknesses and strengths.  
 
 ## Solution
-Our AI Escape Room offers:
+Our AI Escape Room offers:  
 ✅ Quiz-Based Skill Assessment: Learners take an adaptive quiz, and ML (scikit-learn) analyzes their answers to determine their strengths and weaknesses.  
 ✅ Personalized Study Plan: AI recommends tailored learning resources based on quiz performance.  
 ✅ Gamified Learning: Users progress through an escape room challenge where they must solve subject-based questions to advance.  
