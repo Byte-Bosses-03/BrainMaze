@@ -98,9 +98,42 @@
       background: #00ffea;
       transition: width 0.5s ease;
     }
+    .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #16213e;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+        }
+    .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            transition: color 0.3s ease;
+        }
+    .navbar a:hover {
+            color: #00c3ff;
+        }
+    .next-btn:hover {
+            background-color: #008abf;
+        }
   </style>
 </head>
 <body>
+  <nav class="navbar  py-4 w-full fixed top-0 flex justify-around text-white">
+    <a href="homepage.html">Home</a>
+    <a href="subjects.html">Select Your Subject</a>
+    <a href="commuity.html">Community Forum</a>
+    <a href="leaderboard.html">Leaderboard</a>
+    <a href="about.html">About Us</a>
+</nav>
   <h1>🏆 Leaderboard</h1>
   <div class="leaderboard-container">
     <div class="leaderboard-header">
