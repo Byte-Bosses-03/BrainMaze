@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Escape Room</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      color: white;
+      min-height: 100vh;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.5s ease-in-out;
+    }
+    h1 {
+      animation: flicker 1.5s infinite alternate;
+      text-shadow: 0 0 5px #fff, 0 0 10px #e94560, 0 0 15px #e94560;
+    }
+    .room {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 40px;
+      width: 90%;
+      max-width: 800px;
+      padding: 20px;
+      border-radius: 16px;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    .active {
+      display: flex;
+    }
+    .question {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      text-align: center;
+      line-height: 1.6;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .option {
+      background-color: #0f3460;
+      padding: 10px 20px;
+      margin: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    }
+    .option:hover {
+      transform: scale(1.1);
+      background-color: #53354a;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+    }
+    .drop-zone {
+      width: 300px;
+      height: 60px;
+      border: 2px dashed #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      font-weight: bold;
+      background-color: #0f3460;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .input-answer {
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 10px;
+      background-color: #0f3460;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+    .submit-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #e94560;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .submit-btn:hover {
+      background-color: #ff6b81;
+    }
+    .correct {
+      background-color: #27ae60 !important;
+    }
+    .wrong {
+      background-color: #c0392b !important;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes flicker {
+      from { opacity: 1; }
+      to { opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🧩 Python Escape Room</h1>
+
+  <div class="room active" id="room0">
+    <p class="question">🔒  Solve Python clues to unlock hidden rooms. Let the adventure begin...</p>
+    <button class="submit-btn" onclick="goToNextRoom()">Enter the First Room</button>
+  </div>
+
+  <div class="room" id="room1">
+    <div class="question">📜 What is the output of <code>print(2 * '3')</code>?</div>
+    <div class="options">
+      <div class="option" draggable="true">6</div>
+      <div class="option" draggable="true">'6'</div>
+      <div class="option" draggable="true">33</div>
+      <div class="option" draggable="true">333</div>
+    </div>
+    <div class="drop-zone" ondrop="handleDrop(event, 'room1', '33')" ondragover="allowDrop(event)">Drop your answer here</div>
+  </div>
+
+  <div class="room" id="room2">
+    <div class="question">🔍  <br> What does this loop print?<br><code>for i in range(3): print(i)</code></div>
+    <input id="input2" class="input-answer" type="text" placeholder="Enter output...">
+    <button class="submit-btn" onclick="checkAnswer('input2', '0 1 2', 'room2')">Unlock</button>
+  </div>
+
+  <div class="room" id="room3">
+    <div class="question">🧠  What does this function return? <code>def add(x, y): return x + y; add(2, 3)</code></div>
+    <div class="options">
+      <div class="option" onclick="selectAnswer(this, '5', 'room3')">23</div>
+      <div class="option" onclick="selectAnswer(this, '5', 'room3')">5</div>
+      <div class="option" onclick="selectAnswer(this, '5', 'room3')">None</div>
+      <div class="option" onclick="selectAnswer(this, '5', 'room3')">Error</div>
+    </div>
+  </div>
+
+  <div class="room" id="room4">
+    <div class="question">🔐  Which keyword checks if two values are equal in Python?</div>
+    <div class="options">
+      <div class="option" draggable="true">=</div>
+      <div class="option" draggable="true">==</div>
+      <div class="option" draggable="true">equals</div>
+      <div class="option" draggable="true">!=</div>
+    </div>
+    <div class="drop-zone" ondrop="handleDrop(event, 'room4', '==')" ondragover="allowDrop(event)">Drop the right symbol</div>
+  </div>
+
+  <div class="room" id="room5">
+    <h2>🎉 Congratulations, adventurer! You've solved all the Python riddles and escaped the digital dungeon!</h2>
+    <a href="homepage.html" class="submit-btn" style="margin-top: 20px; text-decoration: none; display: inline-block;">Return to Home</a>
+  </div>
+
+  <script>
+    let currentRoom = 0;
+
+    const backgroundImages = [
+      'https://www.pinescape.rs/wp-content/uploads/2019/01/biblioteka-22-1-01-1024x768.jpg',
+      'https://thegreatescapegame.co.uk/wp-content/uploads/2023/10/blog02.jpg',
+      'https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/03/alone-in-the-dark-locked-box-puzzle-1.jpg',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCFpDaAa-mfnxqL_PG_TxptEwm_PYhYEZMfw&s',
+      'https://www.healthysimulation.com/wp-content/uploads/2025/02/free-escape-room-resources-clinical-simulation.jpeg',
+      'https://i.ytimg.com/vi/oPBjxUdW2CA/maxresdefault.jpg'
+    ];
+
+    document.body.style.backgroundImage = `url(${backgroundImages[currentRoom]})`;
+
+    function goToNextRoom() {
+      document.getElementById(`room${currentRoom}`).classList.remove("active");
+      currentRoom++;
+      document.getElementById(`room${currentRoom}`).classList.add("active");
+      document.body.style.backgroundImage = `url(${backgroundImages[currentRoom]})`;
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    document.querySelectorAll('.option').forEach(option => {
+      option.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData("text", e.target.textContent);
+      });
+    });
+
+    function handleDrop(event, roomId, correctAnswer) {
+      event.preventDefault();
+      const droppedText = event.dataTransfer.getData("text").trim();
+      const zone = event.target;
+      zone.textContent = droppedText;
+      if (droppedText === correctAnswer) {
+        zone.classList.add("correct");
+        setTimeout(goToNextRoom, 1000);
+      } else {
+        zone.classList.add("wrong");
+        setTimeout(() => {
+          zone.classList.remove("wrong");
+          zone.textContent = "Try Again";
+        }, 1000);
+      }
+    }
+
+    function checkAnswer(inputId, correctAnswer, roomId) {
+      const input = document.getElementById(inputId);
+      const userAnswer = input.value.trim();
+      if (userAnswer === correctAnswer) {
+        input.classList.add("correct");
+        setTimeout(goToNextRoom, 1000);
+      } else {
+        input.classList.add("wrong");
+        setTimeout(() => input.classList.remove("wrong"), 1000);
+      }
+    }
+
+    function selectAnswer(el, correct, roomId) {
+      const text = el.textContent.trim();
+      if (text === correct) {
+        el.classList.add("correct");
+        setTimeout(goToNextRoom, 1000);
+      } else {
+        el.classList.add("wrong");
+        setTimeout(() => el.classList.remove("wrong"), 1000);
+      }
+    }
+  </script>
+</body>
+</html>
