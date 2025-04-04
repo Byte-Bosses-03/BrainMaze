@@ -128,6 +128,10 @@ except FileNotFoundError:
 def index():
     return app.send_static_file('homepage.html')
 
+@app.route('/login')
+def login_page():
+    return app.send_static_file('login.html')
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
