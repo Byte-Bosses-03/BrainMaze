@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 import json
 from flask_cors import CORS
 import os
@@ -10,6 +10,9 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 load_dotenv()
+
+# Add session secret key
+app.secret_key = os.getenv("SESSION_SECRET_KEY", "your-secret-key-for-development")
 
 # Configure the Gemini API
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -41,12 +44,9 @@ safety_settings = [
   },
 ]
 
-model = genai.GenerativeModel(
-  model_name="gemini-1.5-pro",
-  safety_settings=safety_settings,
-  generation_config=generation_config,
-  system_instruction='''
-  IMPORTANT ... Do not use Markdown formatting (e.g., **bold**, *italics*, `code blocks`, bullet points, or numbered lists). Always return plain text.
+# Updated system instruction that includes handling quiz results
+system_instruction = '''
+IMPORTANT ... Do not use Markdown formatting (e.g., **bold**, *italics*, `code blocks`, bullet points, or numbered lists). Always return plain text.
 Role & Purpose:
 
 You are Cipher, an AI tutor for an interactive learning platform. Your goal is to help users understand topics, solve doubts, and improve their skills based on their learning level. Users may be Beginners, Intermediate, or Advanced learners.
@@ -76,12 +76,45 @@ Guidelines:
 	- Keep responses engaging and motivating to encourage learning.
 	- Recognize achievements (e.g., "Great job! You've mastered this concept!").
 	- If a user asks an unrelated question, gently guide them back to learning.
-dont go on giving para graphs unless neccesary keep the answers crisp no unnececsary info
-also dont give the text in markdown format'''
+	7.	Learning Roadmap:
+	- If the user has quiz results, create personalized learning roadmaps based on their strengths and weaknesses.
+	- Focus on strategies to improve weak areas while leveraging their strengths.
+	- Provide specific practice exercises, resources, and milestones to track progress.
+dont go on giving paragraphs unless necessary keep the answers crisp no unnecessary info
+also dont give the text in markdown format
+'''
+
+model = genai.GenerativeModel(
+  model_name="gemini-1.5-pro",
+  safety_settings=safety_settings,
+  generation_config=generation_config,
+  system_instruction=system_instruction
 )
+
+# Configure database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+
+# User Model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    rank = db.Column(db.String(50), default="Beginner")
+    achievements = db.Column(db.Text, default="") 
+    badges = db.Column(db.Text, default="")
+
+# Create database file (Only runs once)
+with app.app_context():
+    db.create_all()
 
 # Store chat sessions for different users
 chat_sessions = {}
+# Store quiz results for different users
+user_quiz_results = {}
 
 # Load questions from JSON file
 try:
@@ -104,16 +137,26 @@ def chat():
     # Create a new chat session if one doesn't exist for this user
     if session_id not in chat_sessions:
         chat_sessions[session_id] = model.start_chat(history=[])
+        
+        # If user has quiz results, add them to the first message but don't send them to the frontend
+        if session_id in user_quiz_results:
+            quiz_info = user_quiz_results[session_id]
+            initial_context = f"User Quiz Results - Level: {quiz_info['level']}, " \
+                             f"Score: {quiz_info['score']}/{quiz_info['total']}, " \
+                             f"Next Level: {quiz_info['next_level']}, " \
+                             f"Strengths: {', '.join(quiz_info['strengths'])}, " \
+                             f"Weaknesses: {', '.join(quiz_info['weaknesses'])}. " \
+                             f"Please use this information to provide personalized guidance when the user asks about specific topics."
+            
+            # Add the context as a system message but don't display it to the user
+            chat_sessions[session_id].send_message(initial_context)
     
     try:
         # Send the message to the model
         response = chat_sessions[session_id].send_message(user_message)
         model_response = response.text
         
-        # Update chat history
-        chat_sessions[session_id].history.append({"role": "user", "parts": [user_message]})
-        chat_sessions[session_id].history.append({"role": "model", "parts": [model_response]})
-        
+        # Return the response
         return jsonify({"response": model_response})
     except Exception as e:
         return jsonify({"response": f"Sorry, I encountered an error: {str(e)}"})
@@ -124,6 +167,7 @@ def evaluate_quiz():
     data = request.json
     level = data.get("level")  # Beginner, Intermediate, or Advanced
     answers = data.get("answers", [])
+    session_id = request.remote_addr  # Using IP as a simple session identifier
 
     correct_count = 0
     total_questions = len(questions)
@@ -137,7 +181,7 @@ def evaluate_quiz():
         question_data = next((q for q in questions if q["Qid"] == qid), None)
 
         if question_data:
-            subtopic = question_data["Subtopic"]
+            subtopic = question_data.get("Subtopic", "General")
             correct_answer = question_data["Correct Answer"]
 
             if selected_option == correct_answer:
@@ -159,6 +203,20 @@ def evaluate_quiz():
         status = "You are currently at the same level."
         next_level = level
 
+    # Store the quiz results for this user
+    user_quiz_results[session_id] = {
+        "level": level,
+        "score": correct_count,
+        "total": total_questions,
+        "next_level": next_level,
+        "strengths": strengths,
+        "weaknesses": weaknesses
+    }
+    
+    # Reset chat session if it exists to incorporate new quiz results
+    if session_id in chat_sessions:
+        del chat_sessions[session_id]
+
     return jsonify({
         "score": correct_count,
         "total_questions": total_questions,
@@ -167,23 +225,38 @@ def evaluate_quiz():
         "strengths": strengths,
         "weaknesses": weaknesses
     })
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
 
-# User Model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    rank = db.Column(db.String(50), default="Beginner")
-    achievements = db.Column(db.Text, default="") 
-    badges = db.Column(db.Text, default="") 
-# Create database file (Only runs once)
-with app.app_context():
-    db.create_all()
+# Endpoint to get learning roadmap based on quiz results
+@app.route('/api/roadmap', methods=['GET'])
+def get_roadmap():
+    session_id = request.remote_addr  # Using IP as a simple session identifier
+    
+    if session_id not in user_quiz_results:
+        return jsonify({"response": "Please complete a quiz first to get a personalized roadmap."})
+    
+    quiz_info = user_quiz_results[session_id]
+    
+    # Create or reset the chat session
+    if session_id in chat_sessions:
+        del chat_sessions[session_id]
+    
+    chat_sessions[session_id] = model.start_chat(history=[])
+    
+    # Construct a prompt for the roadmap
+    roadmap_prompt = f"Based on my quiz results (Level: {quiz_info['level']}, " \
+                     f"Strengths: {', '.join(quiz_info['strengths'])}, " \
+                     f"Weaknesses: {', '.join(quiz_info['weaknesses'])}), " \
+                     f"please provide a detailed learning roadmap to help me improve my weaknesses " \
+                     f"while building on my strengths. Include specific resources, practice exercises, " \
+                     f"and a timeline for progression to reach {quiz_info['next_level']} level."
+    
+    try:
+        response = chat_sessions[session_id].send_message(roadmap_prompt)
+        model_response = response.text
+        
+        return jsonify({"response": model_response})
+    except Exception as e:
+        return jsonify({"response": f"Sorry, I encountered an error generating your roadmap: {str(e)}"})
 
 # ✅ Register Route
 @app.route('/register', methods=['POST'])
@@ -196,6 +269,7 @@ def register():
     db.session.commit()
 
     return jsonify({"message": "User registered successfully!"})
+
 @app.route('/users', methods=['GET'])
 def get_users():
     users = User.query.all()
@@ -210,9 +284,9 @@ def get_users():
             "rank": user.rank,
             "achievements": user.achievements,
             "badges": user.badges
-
         })
     return jsonify(result)
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
@@ -222,6 +296,7 @@ def login():
         return jsonify({"message": "Login successful!", "username": user.username})
     else:
         return jsonify({"message": "Invalid email or password"}), 401
+
 @app.route('/award_badge', methods=['POST'])
 def award_badge():
     data = request.json
@@ -240,5 +315,6 @@ def award_badge():
         db.session.commit()
 
     return jsonify({"message": f"Badge '{new_badge}' awarded to {user.username}!"})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
