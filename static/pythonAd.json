@@ -19,8 +19,8 @@
   {
     "Qid": "PA3",
     "Ques": "What will be the output of the regex operation? `import re; pattern = r'\\d+'; result = re.findall(pattern, 'Age: 23, Height: 175cm'); print(result)`",
-    "Options": "A) `['23','175']`, B) `['Age:','Height:']`, C) `['23 175']`, D) Error",
-    "Correct Answer": "A) `['23','175']`",
+    "Options": "A) [`23`,`175`], B) [`Age:`,`Height:`], C) [`23 175`], D) Error",
+    "Correct Answer": "A) [`23`,`175`]",
     "Difficulty": "Advanced",
     "Subtopic": "Regular Expressions"
   },
@@ -43,8 +43,8 @@
   {
     "Qid": "PA6",
     "Ques": "Which of the following conversions will raise an error?",
-    "Options": "A) int(\"10.5\"), B) float(\"10\"), C) str(10.5), D) list(\"abc\")",
-    "Correct Answer": "A) int(\"10.5\")",
+    "Options": "A) int(`10.5`), B) float(`10`), C) str(10.5), D) list(`abc`)",
+    "Correct Answer": "A) int(`10.5`)",
     "Difficulty": "Advanced",
     "Subtopic": "Type Conversion"
   },
@@ -75,7 +75,7 @@
   {
     "Qid": "PA10",
     "Ques": "What is the correct way to write to a file in Python?",
-    "Options": "A) open('file.txt','w').write('Hello'), B) with open('file.txt','w') as f: f.write('Hello'), C) f = open('file.txt','w') f.write('Hello') f.close(), D) All of the above",
+    "Options": "A) open(`file.txt`,`w`).write(`Hello`), B) with open(`file.txt`,`w`) as f: f.write(`Hello`), C) f = open(`file.txt`,`w`) f.write(`Hello`) f.close(), D) All of the above",
     "Correct Answer": "D) All of the above",
     "Difficulty": "Advanced",
     "Subtopic": "File Handling"
