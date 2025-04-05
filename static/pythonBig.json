@@ -42,8 +42,8 @@
   {
     "Qid": "PB6",
     "Ques": "How can you read all lines from a file called `data.txt`?",
-    "Options": "A) `open('data.txt').readlines()`, B) `open('data.txt','w').readlines()`, C) `open('data.txt','r').read()`, D) `readfile('data.txt')`",
-    "Correct Answer": "A) `open('data.txt').readlines()`",
+    "Options": "A) `open(`data.txt`).readlines()`, B) `open(`data.txt`,`w`).readlines()`, C) `open(`data.txt`,`r`).read()`, D) `readfile(`data.txt`)`",
+    "Correct Answer": "A) `open(`data.txt`).readlines()`",
     "Difficulty": "Beginner",
     "Subtopic": "File Handling"
   },
@@ -92,7 +92,7 @@
     "Qid": "PB12",
     "Ques": "Which keyword is used to define a function in Python?",
     "Options": "A) func, B) define, C) def, D) function ",
-    "Correct Answer": "C. def",
+    "Correct Answer": "C) def",
     "Difficulty": "Beginner",
     "Subtopic": "Functions & Modules"
   },
