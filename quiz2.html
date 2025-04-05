@@ -142,7 +142,7 @@
 
         async function loadQuestions() {
             try {
-                const response = await fetch('pythonBig.json'); // Load questions from JSON file
+                const response = await fetch('/static/pythonBig.json'); // Load questions from JSON file
                 questions = await response.json();
                 displayQuestion();
             } catch (error) {
@@ -215,7 +215,7 @@
             const requestData = { level, answers: userAnswers };
 
             try {
-                const response = await fetch('http://127.0.0.1:5000/evaluate_quiz', {
+                const response = await fetch('/evaluate_quiz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestData),
@@ -243,7 +243,7 @@
         
         async function getRoadmap() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/roadmap');
+                const response = await fetch('/api/roadmap');
                 const data = await response.json();
                 
                 // Create roadmap container
