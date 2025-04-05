@@ -142,8 +142,21 @@
 
         async function loadQuestions() {
             try {
-                const response = await fetch('/static/pythonBig.json'); // Load questions from JSON file
+                const selectedLevel = localStorage.getItem("selectedLevel") || "beginner"; // default fallback
+
+                let fileName = "";
+
+                if (selectedLevel === "beginner") {
+                    fileName = "static/pythonBig.json";
+                } else if (selectedLevel === "intermediate") {
+                    fileName = "static/pythonInter.json";
+                } else if (selectedLevel === "advanced") {
+                    fileName = "static/pythonAd.json";
+                }
+
+                const response = await fetch(fileName); // Load based on selected level
                 questions = await response.json();
+
                 displayQuestion();
             } catch (error) {
                 console.error('Error loading questions:', error);
@@ -211,7 +224,7 @@
         }
         
         async function submitQuiz() {
-            const level = "Beginner"; // Change dynamically based on quiz type
+            const level = localStorage.getItem("selectedLevel") || "beginner"; // Change dynamically based on quiz type
             const requestData = { level, answers: userAnswers };
 
             try {
