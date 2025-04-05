@@ -118,7 +118,7 @@ user_quiz_results = {}
 
 # Load questions from JSON file
 try:
-    with open("pythonBig.json", "r") as f:
+    with open("static/pythonBig.json", "r") as f:
         questions = json.load(f)
 except FileNotFoundError:
     questions = []
