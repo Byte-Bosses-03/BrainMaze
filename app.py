@@ -166,61 +166,56 @@ def chat():
         return jsonify({"response": f"Sorry, I encountered an error: {str(e)}"})
 
 # Process user's answers
+# Process user's answers
 @app.route('/evaluate_quiz', methods=['POST'])
 def evaluate_quiz():
     data = request.json
     level = data.get("level")  # Beginner, Intermediate, or Advanced
     answers = data.get("answers", [])
     session_id = request.remote_addr  # Using IP as a simple session identifier
-
-filename = ""
-if level.lower() == "beginner":
-	filename = "static/pythonBig.json"
-elif level.lower() == "intermediate":
-	filename = "static/pythonInter.json"
-elif level.lower() == "advanced":
-	filename = "static/pythonAd.json"
-	
-try:
-	    # Try with the relative path first
-	with open(filename, "r") as f:
-	        questions = json.load(f)
-except FileNotFoundError:
-	    # If that fails, try with absolute path
-	try:
-		with open(os.path.join(os.path.dirname(__file__), filename), "r") as f:
-	            questions = json.load(f)
-	except FileNotFoundError:
-	        # As a last resort, try without the static folder
-	        base_filename = os.path.basename(filename)
-	        with open(base_filename, "r") as f:
-	            questions = json.load(f)
-	
+    
+    filename = ""
+    if level.lower() == "beginner":
+        filename = "static/pythonBig.json"
+    elif level.lower() == "intermediate":
+        filename = "static/pythonInter.json"
+    elif level.lower() == "advanced":
+        filename = "static/pythonAd.json"
+        
+    try:
+        # Try with the relative path first
+        with open(filename, "r") as f:
+            questions = json.load(f)
+    except FileNotFoundError:
+        # If that fails, try with absolute path
+        try:
+            with open(os.path.join(os.path.dirname(__file__), filename), "r") as f:
+                questions = json.load(f)
+        except FileNotFoundError:
+            # As a last resort, try without the static folder
+            base_filename = os.path.basename(filename)
+            with open(base_filename, "r") as f:
+                questions = json.load(f)
+    
     correct_count = 0
     total_questions = len(questions)
     subtopic_analysis = {}
-
     for answer in answers:
         qid = answer["Qid"]
         selected_option = answer["Selected"]
-
         # Find the correct answer from the JSON data
         question_data = next((q for q in questions if q["Qid"] == qid), None)
-
         if question_data:
             subtopic = question_data.get("Subtopic", "General")
             correct_answer = question_data["Correct Answer"]
-
             if selected_option == correct_answer:
                 correct_count += 1
                 subtopic_analysis[subtopic] = subtopic_analysis.get(subtopic, 0) + 1
             else:
                 subtopic_analysis[subtopic] = subtopic_analysis.get(subtopic, 0) - 1
-
     # Determine strengths and weaknesses
     strengths = [sub for sub, score in subtopic_analysis.items() if score > 0]
     weaknesses = [sub for sub, score in subtopic_analysis.items() if score <= 0]
-
     # Determine if the user passes to the next level
     percentage = (correct_count / total_questions) * 100
     if percentage >= 80:
@@ -229,7 +224,6 @@ except FileNotFoundError:
     else:
         status = "You are currently at the same level."
         next_level = level
-
     # Store the quiz results for this user
     user_quiz_results[session_id] = {
         "level": level,
@@ -243,7 +237,6 @@ except FileNotFoundError:
     # Reset chat session if it exists to incorporate new quiz results
     if session_id in chat_sessions:
         del chat_sessions[session_id]
-
     return jsonify({
         "score": correct_count,
         "total_questions": total_questions,
@@ -252,7 +245,6 @@ except FileNotFoundError:
         "strengths": strengths,
         "weaknesses": weaknesses
     })
-
 # Endpoint to get learning roadmap based on quiz results
 @app.route('/api/roadmap', methods=['GET'])
 def get_roadmap():
