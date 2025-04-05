@@ -173,16 +173,28 @@ def evaluate_quiz():
     answers = data.get("answers", [])
     session_id = request.remote_addr  # Using IP as a simple session identifier
 
-    filename = ""
-    if level.lower() == "beginner":
-        filename = "static/pythonBig.json"
-    elif level.lower() == "intermediate":
-        filename = "static/pythonInter.json"
-    elif level.lower() == "advanced":
-        filename = "static/pythonAd.json"
-
-    with open(filename, "r") as f:
-        questions = json.load(f)
+filename = ""
+if level.lower() == "beginner":
+	filename = "static/pythonBig.json"
+elif level.lower() == "intermediate":
+	filename = "static/pythonInter.json"
+elif level.lower() == "advanced":
+	filename = "static/pythonAd.json"
+	
+try:
+	    # Try with the relative path first
+	with open(filename, "r") as f:
+	        questions = json.load(f)
+except FileNotFoundError:
+	    # If that fails, try with absolute path
+	try:
+		with open(os.path.join(os.path.dirname(__file__), filename), "r") as f:
+	            questions = json.load(f)
+	except FileNotFoundError:
+	        # As a last resort, try without the static folder
+	        base_filename = os.path.basename(filename)
+	        with open(base_filename, "r") as f:
+	            questions = json.load(f)
 	
     correct_count = 0
     total_questions = len(questions)
