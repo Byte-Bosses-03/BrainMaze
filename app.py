@@ -173,6 +173,17 @@ def evaluate_quiz():
     answers = data.get("answers", [])
     session_id = request.remote_addr  # Using IP as a simple session identifier
 
+    filename = ""
+    if level.lower() == "beginner":
+        filename = "static/pythonBig.json"
+    elif level.lower() == "intermediate":
+        filename = "static/pythonInter.json"
+    elif level.lower() == "advanced":
+        filename = "static/pythonAd.json"
+
+    with open(filename, "r") as f:
+        questions = json.load(f)
+	
     correct_count = 0
     total_questions = len(questions)
     subtopic_analysis = {}
