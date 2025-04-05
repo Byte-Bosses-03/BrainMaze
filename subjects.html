@@ -133,9 +133,9 @@
     <div class="overlay" id="levelOverlay" onclick="closeLevelPopup()"></div>
     <div class="level-popup" id="levelPopup">
         <h2>Choose Your Level</h2>
-        <button class="neon-button px-4 py-2 mt-4" onclick="showStartButton()">Beginner</button>
-        <button class="neon-button px-4 py-2 mt-4" onclick="showStartButton()">Intermediate</button>
-        <button class="neon-button px-4 py-2 mt-4" onclick="showStartButton()">Advanced</button>
+        <button class="neon-button px-4 py-2 mt-4" data-level="beginner" onclick="selectLevel(this)">Beginner</button>
+        <button class="neon-button px-4 py-2 mt-4" data-level="intermediate" onclick="selectLevel(this)">Intermediate</button>
+        <button class="neon-button px-4 py-2 mt-4" data-level="advanced" onclick="selectLevel(this)">Advanced</button>
         <div class="mt-4">
         <button class="neon-button px-4 py-2 mt-4 hidden" id="startGame" onclick="window.location.href='quiz2.html'">Start Quiz</button>
         <button class="neon-button px-4 py-2 mt-4" onclick="closeLevelPopup()">Close</button>
@@ -164,8 +164,10 @@
             document.getElementById('levelOverlay').style.display = 'none';
         }
 
-        function showStartButton() {
-            document.getElementById('startGame').classList.remove('hidden');
+        function selectLevel(button) {
+            const level = button.getAttribute("data-level");
+            localStorage.setItem("selectedLevel", level);
+            document.getElementById("startGame").classList.remove("hidden");
         }
 
 
